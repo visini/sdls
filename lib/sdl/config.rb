@@ -4,7 +4,7 @@ require "yaml"
 
 module SDL
   REQUIRED_KEYS = %i[host username password]
-  Config = Data.define(:host, :username, :password) do
+  Config = Data.define(:host, :username, :password, :op_item_name) do
     def self.load(path)
       raise "Configuration file not found: #{path}" unless File.exist?(path)
 
