@@ -6,7 +6,8 @@ source "https://rubygems.org"
 
 gem "thor"
 
-group :development do
+group :development, :test do
+  gem "rake"
   gem "standard"
   gem "minitest"
   gem "minitest-reporters"

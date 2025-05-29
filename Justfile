@@ -1,3 +1,3 @@
 test:
   bundle exec standardrb
-  rake test
+  bundle exec rake test
