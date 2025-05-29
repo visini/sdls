@@ -1,0 +1,8 @@
+name: ci
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+jobs:
+  test:
+    uses: ./.github/workflows/test.yml
