@@ -5,9 +5,12 @@ ruby file: ".ruby-version"
 source "https://rubygems.org"
 
 gem "thor"
+gem "tty-prompt"
 
-group :development do
+group :development, :test do
+  gem "rake"
   gem "standard"
   gem "minitest"
   gem "minitest-reporters"
+  gem "webmock"
 end

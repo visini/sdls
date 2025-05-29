@@ -1,14 +1,9 @@
-require "thor"
+# frozen_string_literal: true
+
+require_relative "sdl/cli"
+require_relative "sdl/config"
+require_relative "sdl/version"
+require_relative "sdl/client"
 
 module SDL
-  class CLI < Thor
-    desc "hello NAME", "Say hello to NAME"
-    def hello(name)
-      puts "Hello, #{name}!"
-    end
-
-    def self.exit_on_failure?
-      true # Exit with a non-zero status code on failure
-    end
-  end
 end
