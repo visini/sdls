@@ -9,6 +9,10 @@ class ConfigTest < Minitest::Test
         host: http://nas.local:5000
         username: test_user
         password: test_pass
+        op_item_name: MyItem
+        directories:
+          - test/dir
+          - another
       YAML
       file.rewind
 
@@ -19,9 +23,12 @@ class ConfigTest < Minitest::Test
       end
 
       assert_equal <<~OUTPUT, output
-        host: http://nas.local:5000
-        username: test_user
-        password: [REDACTED]
+        Current config:
+          host: http://nas.local:5000
+          username: test_user
+          password: [REDACTED]
+          op_item_name: MyItem
+          directories: test/dir, another
       OUTPUT
     ensure
       ENV.delete("SDL_CONFIG_PATH")

@@ -46,6 +46,33 @@ module SDL
       nil
     end
 
+    def create_download(magnet:, destination:)
+      sid = authenticate
+      return false unless sid
+
+      uri = URI.parse("#{@host}/webapi/DownloadStation/task.cgi")
+      data = {
+        api: "SYNO.DownloadStation.Task",
+        version: "1",
+        method: "create",
+        session: "DownloadStation",
+        _sid: sid,
+        uri: magnet,
+        destination: destination
+      }
+
+      response = Net::HTTP.post_form(uri, data)
+      body = JSON.parse(response.body)
+
+      unless response.is_a?(Net::HTTPSuccess) && body["success"]
+        warn "Download creation failed: #{body.inspect}"
+        return false
+      end
+
+      puts "Download created successfully in #{destination}"
+      true
+    end
+
     private
 
     def fetch_otp_from_1password

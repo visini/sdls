@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "thor"
+require "tty-prompt"
 
 module SDL
   class CLI < Thor
@@ -33,20 +34,37 @@ module SDL
 
     desc "config", "Display the current configuration"
     def config
-      puts "Host: #{current_config.host}"
-      puts "Username: #{current_config.username}"
-      puts "Password: #{current_config.password ? "[REDACTED]" : "Not set"}"
+      puts "Current config:"
+      puts "  host: #{current_config.host}"
+      puts "  username: #{current_config.username}"
+      puts "  password: [REDACTED]"
+      puts "  op_item_name: #{current_config.op_item_name}" if current_config.op_item_name
+      puts "  directories: #{current_config.directories.join(", ")}" if current_config.directories.any?
     end
 
     desc "connect", "Verify connectivity and authentication with the server"
     def connect
       sid = client.authenticate
       if sid
-        puts "Connection successful. Session ID: #{sid}"
+        puts "Connection successful. Session ID: #{sid.slice(0, 8)}..."
       else
         puts "Connection failed. Please check your credentials or server status."
         exit 1
       end
+    end
+
+    desc "add MAGNET", "Add a magnet link to Synology Download Station"
+    def add(magnet)
+      unless magnet.start_with?("magnet:")
+        warn "Invalid magnet link."
+        exit 1
+      end
+
+      prompt = TTY::Prompt.new
+      destination = prompt.select("Choose download directory", current_config.directories, default: current_config.directories.first)
+
+      success = client.create_download(magnet: magnet, destination: destination)
+      exit 1 unless success
     end
 
     def self.exit_on_failure?
