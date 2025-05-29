@@ -12,4 +12,5 @@ group :development, :test do
   gem "standard"
   gem "minitest"
   gem "minitest-reporters"
+  gem "webmock"
 end

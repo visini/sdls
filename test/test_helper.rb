@@ -2,6 +2,7 @@
 
 require "minitest/autorun"
 require "minitest/reporters"
+require "minitest/mock"
 require "stringio"
 require_relative "../lib/sdl"
 
