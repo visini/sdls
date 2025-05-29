@@ -1,0 +1,6 @@
+options:
+  prefix: /tmp/tebako
+  Ruby: 3.4.3
+  root: .
+  entry-point: bin/sdl
+  output: sdl.tebako

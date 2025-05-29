@@ -1,0 +1,33 @@
+name: test
+on: [workflow_call]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: Lint code for consistent style via Standard Ruby
+        run: bundle exec standardrb
+
+      - name: Run tests
+        run: bundle exec rake test
+
+      - name: Package using Tebako and .tebako.yml
+        run: |
+          docker pull ghcr.io/tamatebako/tebako-ubuntu-20.04:latest
+          docker run -v ${{ github.workspace }}:/mnt/w \
+            -t ghcr.io/tamatebako/tebako-ubuntu-20.04:latest \
+            tebako press -t /mnt/w/.tebako.yml
+
+      # - name: Upload Tebako Package
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: sdl.tebako
+      #     path: sdl.tebako
