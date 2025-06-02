@@ -42,12 +42,16 @@ Run `just test` to lint and test.
 
 ## Releasing a new version
 
-On the main branch, add the changes to `CHANGELOG.md` and stage it.
+On the main branch, add the changes to `CHANGELOG.md`.
 
-Then, tag the new version:
+Then, bump the version in `version.rb` and `sdls.gemspec`.
+
+Then, run `bundle`, which will update `Gemfile.lock`.
+
+With these four changed and staged files, tag the new version:
 
 ```rb
-git commit -am "Release v0.1.0"
+git commit -m "Release v0.1.0"
 git tag v0.1.0
 git push origin main --tags
 ```
