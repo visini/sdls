@@ -2,6 +2,7 @@
 
 require "thor"
 require "tty-prompt"
+require "clipboard"
 
 module SDLS
   class CLI < Thor
@@ -53,10 +54,12 @@ module SDLS
       end
     end
 
-    desc "add MAGNET", "Add a magnet link to Synology Download Station"
-    def add(magnet)
-      unless magnet.start_with?("magnet:")
-        warn "Invalid magnet link."
+    desc "add [MAGNET]", "Add a magnet link to Synology Download Station"
+    def add(magnet = nil)
+      magnet ||= Clipboard.paste.strip
+
+      unless magnet&.start_with?("magnet:")
+        warn "Invalid or missing magnet link."
         exit 1
       end
 

@@ -6,6 +6,7 @@ source "https://rubygems.org"
 
 gem "thor"
 gem "tty-prompt"
+gem "clipboard"
 
 group :development, :test do
   gem "rake"
