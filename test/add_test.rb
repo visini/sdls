@@ -47,6 +47,7 @@ class AddTest < Minitest::Test
     WebMock.disable!
     @temp_config&.unlink
     ENV.delete("SDLS_CONFIG_PATH")
+    ENV.delete("SDLS_FORCE_OP_CLI")
   end
 
   def test_add_success_with_directory_selection
@@ -262,7 +263,8 @@ class AddTest < Minitest::Test
         }.to_json
       )
 
-    # Mock successful 1Password OTP retrieval
+    ENV["SDLS_FORCE_OP_CLI"] = "true" # Simulate 1Password CLI available
+
     mock_status = Minitest::Mock.new
     mock_status.expect(:success?, true)
 
@@ -272,19 +274,15 @@ class AddTest < Minitest::Test
       ["NAS/01_documents", "NAS/02_archive"]
     ], default: "NAS/01_documents")
 
-    # Mock that the CLI instance can access the client to stub onepassword_cli_available?
-    client = SDLS::Client.new(host: "http://nas.local:5000", username: "test_user", password: "test_pass", op_item_name: "MyItem")
-    client.stub :onepassword_cli_available?, true do
-      Open3.stub :capture3, ["123456\n", "", mock_status] do
-        TTY::Prompt.stub :new, mock_prompt do
-          output, _ = capture_io do
-            SDLS::CLI.start(["add", magnet_link])
-          end
-
-          assert_match(/OTP required for authentication\./, output)
-          assert_match(/Fetching OTP from 1Password\.\.\./, output)
-          assert_match(/Download created successfully in NAS\/01_documents/, output)
+    Open3.stub :capture3, ["123456\n", "", mock_status] do
+      TTY::Prompt.stub :new, mock_prompt do
+        output, _ = capture_io do
+          SDLS::CLI.start(["add", magnet_link])
         end
+
+        assert_match(/OTP required for authentication\./, output)
+        assert_match(/Fetching OTP from 1Password\.\.\./, output)
+        assert_match(/Download created successfully in NAS\/01_documents/, output)
       end
     end
 

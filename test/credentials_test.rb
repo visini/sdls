@@ -218,15 +218,18 @@ class CredentialsTest < Minitest::Test
   end
 
   def test_onepassword_cli_availability_memoization
-    # First call should check system
-    SDLS::Config.stub(:system, true) do
-      assert SDLS::Config.send(:onepassword_cli_available?)
-    end
+    # Simulate CLI available via ENV
+    ENV["SDLS_FORCE_OP_CLI"] = "true"
 
-    # Second call should use memoized value (system shouldn't be called again)
-    SDLS::Config.stub(:system, false) do
-      assert SDLS::Config.send(:onepassword_cli_available?)
-    end
+    assert SDLS::Config.send(:onepassword_cli_available?)
+
+    # Change ENV, should still return memoized true (i.e., not affected by ENV now)
+    ENV["SDLS_FORCE_OP_CLI"] = "false"
+
+    assert SDLS::Config.send(:onepassword_cli_available?)
+  ensure
+    ENV.delete("SDLS_FORCE_OP_CLI")
+    SDLS::Config.instance_variable_set(:@op_cli_available, nil)
   end
 
   def test_fetch_field_handles_missing_field_gracefully

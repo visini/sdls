@@ -109,7 +109,13 @@ module SDLS
     end
 
     def onepassword_cli_available?
-      system("which op > /dev/null 2>&1")
+      return @op_cli_available unless @op_cli_available.nil?
+
+      @op_cli_available = if ENV.key?("SDLS_FORCE_OP_CLI")
+        ENV["SDLS_FORCE_OP_CLI"] == "true"
+      else
+        system("which op > /dev/null 2>&1")
+      end
     end
 
     def fetch_otp_from_1password

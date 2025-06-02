@@ -39,6 +39,7 @@ class ConnectTest < Minitest::Test
     WebMock.disable!
     @temp_config&.unlink
     ENV.delete("SDLS_CONFIG_PATH")
+    ENV.delete("SDLS_FORCE_OP_CLI")
   end
 
   def test_connect_success
@@ -161,19 +162,17 @@ class ConnectTest < Minitest::Test
     mock_status = Minitest::Mock.new
     mock_status.expect(:success?, true)
 
-    # Mock that `which op` command succeeds (1Password CLI is available)
-    client = SDLS::Client.new(host: "http://nas.local:5000", username: "test_user", password: "test_pass", op_item_name: "MyItem")
-    client.stub :onepassword_cli_available?, true do
-      Open3.stub :capture3, ["123456\n", "", mock_status] do
-        output, _ = capture_io do
-          SDLS::CLI.start(["connect"])
-        end
+    ENV["SDLS_FORCE_OP_CLI"] = "true" # Simulate 1Password CLI available
 
-        assert_match(/OTP required for authentication\./, output.strip)
-        assert_match(/Fetching OTP from 1Password\.\.\./, output.strip)
-        assert_match(/Connection successful. Session ID: test_ses\.\.\./, output.strip)
-        assert_requested :post, "http://nas.local:5000/webapi/auth.cgi", times: 2
+    Open3.stub :capture3, ["123456\n", "", mock_status] do
+      output, _ = capture_io do
+        SDLS::CLI.start(["connect"])
       end
+
+      assert_match(/OTP required for authentication\./, output.strip)
+      assert_match(/Fetching OTP from 1Password\.\.\./, output.strip)
+      assert_match(/Connection successful. Session ID: test_ses\.\.\./, output.strip)
+      assert_requested :post, "http://nas.local:5000/webapi/auth.cgi", times: 2
     end
 
     mock_status.verify

@@ -16,5 +16,5 @@ jobs:
       - name: Lint code for consistent style via Standard Ruby
         run: bundle exec standardrb
 
-      - name: Run tests with Minitest verbosity
-        run: bundle exec ruby -Ilib:test -e 'Dir["test/**/*_test.rb"].each { require_relative _1 }' -- --verbose
+      - name: Run tests
+        run: bundle exec rake test
