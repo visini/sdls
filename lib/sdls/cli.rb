@@ -26,6 +26,15 @@ module SDLS
           op_item_name: current_config.op_item_name
         )
       end
+
+      def extract_torrent_name(magnet)
+        uri = URI.parse(magnet)
+        query = URI.decode_www_form(uri.query || "")
+        dn_param = query.find { |key, _| key == "dn" }
+        dn_param&.last
+      rescue URI::InvalidURIError
+        nil
+      end
     end
 
     desc "version", "Display the SDLS tool version"
@@ -62,6 +71,9 @@ module SDLS
         warn "Invalid or missing magnet link."
         exit 1
       end
+
+      name = extract_torrent_name(magnet)
+      puts "Adding torrent: #{name}" if name
 
       prompt = TTY::Prompt.new
       destination = prompt.select("Choose download directory", current_config.directories, default: current_config.directories.first)

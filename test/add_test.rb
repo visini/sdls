@@ -335,6 +335,39 @@ class AddTest < Minitest::Test
     end
   end
 
+  def test_add_prints_torrent_name
+    magnet_link = "magnet:?xt=urn:btih:abc123&dn=Important.Research.Archive.zip"
+
+    stub_auth_success
+
+    stub_request(:post, "http://nas.local:5000/webapi/DownloadStation/task.cgi")
+      .with(body: hash_including(uri: magnet_link))
+      .to_return(
+        status: 200,
+        body: {success: true}.to_json,
+        headers: {"Content-Type" => "application/json"}
+      )
+
+    mock_prompt = Minitest::Mock.new
+    mock_prompt.expect(:select, "NAS/01_documents", [
+      "Choose download directory",
+      ["NAS/01_documents", "NAS/02_archive"]
+    ], default: "NAS/01_documents")
+
+    TTY::Prompt.stub :new, mock_prompt do
+      output, _ = capture_io do
+        SDLS::CLI.start(["add", magnet_link])
+      end
+
+      assert_match(/Adding torrent: Important\.Research\.Archive\.zip/, output)
+      assert_match(/Download created successfully/, output)
+    end
+
+    mock_prompt.verify
+    assert_requested :get, auth_url
+    assert_requested :post, "http://nas.local:5000/webapi/DownloadStation/task.cgi"
+  end
+
   private
 
   def stub_auth_success
