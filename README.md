@@ -1,5 +1,23 @@
 # sdls - Synology Download Station CLI
 
+`sdls` is a command-line interface for adding download tasks to Synology Download Station using magnet links. It provides a simple, scriptable way to queue downloads from your terminal, including integration with 1Password for 2FA.
+
+## Installation
+
+`gem install sdls`
+
+## Usage
+
+```bash
+❯ sdls
+Commands:
+  sdls add [MAGNET]    # Add a magnet link to Synology Download Station
+  sdls config          # Display the current configuration
+  sdls connect         # Verify connectivity and authentication
+  sdls help [COMMAND]  # Describe available commands or one specific command
+  sdls version         # Display the SDLS tool version
+```
+
 ## Configuration
 
 Configure via `~/.config/sdls.yml`:
@@ -13,6 +31,8 @@ directories:
   - NAS/01_documents
   - NAS/02_archive
 ```
+
+Note: Set `SDLS_CONFIG_PATH` to customize the config path.
 
 ## Development
 
@@ -32,4 +52,4 @@ git push origin main --tags
 
 Then, create a [new release](https://github.com/visini/sdls/releases/new) and choose the tag (e.g., `v0.1.0`) and title (e.g., `v0.1.0`). Copy the description from `CHANGELOG.md`.
 
-Then, run `gem release`.
+Finally, run `gem release`.
