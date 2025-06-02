@@ -31,3 +31,5 @@ git push origin main --tags
 ```
 
 Then, create a [new release](https://github.com/visini/sdls/releases/new) and choose the tag (e.g., `v0.1.0`) and title (e.g., `v0.1.0`). Copy the description from `CHANGELOG.md`.
+
+Then, run `gem release`.
