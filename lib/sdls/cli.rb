@@ -2,6 +2,7 @@
 
 require "thor"
 require "tty-prompt"
+require "clipboard"
 
 module SDLS
   class CLI < Thor
@@ -24,6 +25,15 @@ module SDLS
           password: current_config.password,
           op_item_name: current_config.op_item_name
         )
+      end
+
+      def extract_torrent_name(magnet)
+        uri = URI.parse(magnet)
+        query = URI.decode_www_form(uri.query || "")
+        dn_param = query.find { |key, _| key == "dn" }
+        dn_param&.last
+      rescue URI::InvalidURIError
+        nil
       end
     end
 
@@ -53,12 +63,17 @@ module SDLS
       end
     end
 
-    desc "add MAGNET", "Add a magnet link to Synology Download Station"
-    def add(magnet)
-      unless magnet.start_with?("magnet:")
-        warn "Invalid magnet link."
+    desc "add [MAGNET]", "Add a magnet link to Synology Download Station"
+    def add(magnet = nil)
+      magnet ||= Clipboard.paste.strip
+
+      unless magnet&.start_with?("magnet:")
+        warn "Invalid or missing magnet link."
         exit 1
       end
+
+      name = extract_torrent_name(magnet)
+      puts "Adding torrent: #{name}" if name
 
       prompt = TTY::Prompt.new
       destination = prompt.select("Choose download directory", current_config.directories, default: current_config.directories.first)
