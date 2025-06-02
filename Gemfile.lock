@@ -1,3 +1,11 @@
+PATH
+  remote: .
+  specs:
+    sdls (0.1.0)
+      clipboard
+      thor
+      tty-prompt
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -90,13 +98,11 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  clipboard
   minitest
   minitest-reporters
   rake
+  sdls!
   standard
-  thor
-  tty-prompt
   webmock
 
 RUBY VERSION
