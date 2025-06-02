@@ -9,7 +9,7 @@ class ConnectTest < Minitest::Test
     WebMock.reset!
 
     # Create a temporary config file for testing
-    @temp_config = Tempfile.new("sdl_config")
+    @temp_config = Tempfile.new("sdls_config")
     @temp_config.write <<~YAML
       host: http://nas.local:5000
       username: test_user
@@ -22,13 +22,13 @@ class ConnectTest < Minitest::Test
     @temp_config.rewind
     @temp_config.close
 
-    ENV["SDL_CONFIG_PATH"] = @temp_config.path
+    ENV["SDLS_CONFIG_PATH"] = @temp_config.path
   end
 
   def teardown
     WebMock.disable!
     @temp_config&.unlink
-    ENV.delete("SDL_CONFIG_PATH")
+    ENV.delete("SDLS_CONFIG_PATH")
   end
 
   def test_connect_success
@@ -46,7 +46,7 @@ class ConnectTest < Minitest::Test
       )
 
     output, _ = capture_io do
-      SDL::CLI.start(["connect"])
+      SDLS::CLI.start(["connect"])
     end
 
     assert_match(/Connection successful. Session ID: test_ses\.\.\./, output.strip)
@@ -69,7 +69,7 @@ class ConnectTest < Minitest::Test
 
     output, _ = capture_io do
       assert_raises SystemExit do
-        SDL::CLI.start(["connect"])
+        SDLS::CLI.start(["connect"])
       end
     end
 
@@ -84,7 +84,7 @@ class ConnectTest < Minitest::Test
 
     output, _ = capture_io do
       assert_raises SystemExit do
-        SDL::CLI.start(["connect"])
+        SDLS::CLI.start(["connect"])
       end
     end
 
@@ -99,7 +99,7 @@ class ConnectTest < Minitest::Test
 
     output, _ = capture_io do
       assert_raises SystemExit do
-        SDL::CLI.start(["connect"])
+        SDLS::CLI.start(["connect"])
       end
     end
 
@@ -143,7 +143,7 @@ class ConnectTest < Minitest::Test
 
     Open3.stub :capture3, ["123456\n", "", mock_status] do
       output, _ = capture_io do
-        SDL::CLI.start(["connect"])
+        SDLS::CLI.start(["connect"])
       end
 
       assert_match(/Connection successful. Session ID: test_ses\.\.\./, output.strip)

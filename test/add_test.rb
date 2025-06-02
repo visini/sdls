@@ -9,7 +9,7 @@ class AddTest < Minitest::Test
     WebMock.reset!
 
     # Create a temporary config file for testing
-    @temp_config = Tempfile.new("sdl_config")
+    @temp_config = Tempfile.new("sdls_config")
     @temp_config.write <<~YAML
       host: http://nas.local:5000
       username: test_user
@@ -22,13 +22,13 @@ class AddTest < Minitest::Test
     @temp_config.rewind
     @temp_config.close
 
-    ENV["SDL_CONFIG_PATH"] = @temp_config.path
+    ENV["SDLS_CONFIG_PATH"] = @temp_config.path
   end
 
   def teardown
     WebMock.disable!
     @temp_config&.unlink
-    ENV.delete("SDL_CONFIG_PATH")
+    ENV.delete("SDLS_CONFIG_PATH")
   end
 
   def test_add_success_with_directory_selection
@@ -65,7 +65,7 @@ class AddTest < Minitest::Test
 
     TTY::Prompt.stub :new, mock_prompt do
       output, _ = capture_io do
-        SDL::CLI.start(["add", magnet_link])
+        SDLS::CLI.start(["add", magnet_link])
       end
 
       assert_match(/Download created successfully in NAS\/01_documents/, output.strip)
@@ -81,7 +81,7 @@ class AddTest < Minitest::Test
 
     _, stderr = capture_io do
       assert_raises SystemExit do
-        SDL::CLI.start(["add", invalid_link])
+        SDLS::CLI.start(["add", invalid_link])
       end
     end
 
@@ -109,7 +109,7 @@ class AddTest < Minitest::Test
     TTY::Prompt.stub :new, mock_prompt do
       _, stderr = capture_io do
         assert_raises SystemExit do
-          SDL::CLI.start(["add", magnet_link])
+          SDLS::CLI.start(["add", magnet_link])
         end
       end
 
@@ -160,7 +160,7 @@ class AddTest < Minitest::Test
     TTY::Prompt.stub :new, mock_prompt do
       _, stderr = capture_io do
         assert_raises SystemExit do
-          SDL::CLI.start(["add", magnet_link])
+          SDLS::CLI.start(["add", magnet_link])
         end
       end
 
@@ -210,7 +210,7 @@ class AddTest < Minitest::Test
     TTY::Prompt.stub :new, mock_prompt do
       _, stderr = capture_io do
         assert_raises SystemExit do
-          SDL::CLI.start(["add", magnet_link])
+          SDLS::CLI.start(["add", magnet_link])
         end
       end
 
@@ -287,7 +287,7 @@ class AddTest < Minitest::Test
     Open3.stub :capture3, ["123456\n", "", mock_status] do
       TTY::Prompt.stub :new, mock_prompt do
         output, _ = capture_io do
-          SDL::CLI.start(["add", magnet_link])
+          SDLS::CLI.start(["add", magnet_link])
         end
 
         assert_match(/OTP required for authentication. Fetching from 1Password.../, output)
