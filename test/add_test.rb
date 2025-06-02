@@ -5,42 +5,44 @@ require "webmock/minitest"
 
 class AddTest < Minitest::Test
   def setup
-    WebMock.enable!
-    WebMock.reset!
+    Clipboard.stub :paste, "magnet:?xt=urn:btih:stubdefault&dn=default" do
+      WebMock.enable!
+      WebMock.reset!
 
-    # Create a temporary config file for testing
-    @temp_config = Tempfile.new("sdls_config")
-    @temp_config.write <<~YAML
-      host: http://nas.local:5000
-      username: test_user
-      password: test_pass
-      op_item_name: MyItem
-      directories:
-        - NAS/01_documents
-        - NAS/02_archive
-    YAML
-    @temp_config.rewind
-    @temp_config.close
+      # Create a temporary config file for testing
+      @temp_config = Tempfile.new("sdls_config")
+      @temp_config.write <<~YAML
+        host: http://nas.local:5000
+        username: test_user
+        password: test_pass
+        op_item_name: MyItem
+        directories:
+          - NAS/01_documents
+          - NAS/02_archive
+      YAML
+      @temp_config.rewind
+      @temp_config.close
 
-    ENV["SDLS_CONFIG_PATH"] = @temp_config.path
+      ENV["SDLS_CONFIG_PATH"] = @temp_config.path
 
-    @auth_params = {
-      "account" => "test_user",
-      "api" => "SYNO.API.Auth",
-      "format" => "cookie",
-      "method" => "login",
-      "passwd" => "test_pass",
-      "session" => "FileStation",
-      "version" => "6"
-    }
+      @auth_params = {
+        "account" => "test_user",
+        "api" => "SYNO.API.Auth",
+        "format" => "cookie",
+        "method" => "login",
+        "passwd" => "test_pass",
+        "session" => "FileStation",
+        "version" => "6"
+      }
 
-    @download_params = {
-      "api" => "SYNO.DownloadStation.Task",
-      "version" => "1",
-      "method" => "create",
-      "session" => "DownloadStation",
-      "_sid" => "test_session_id_12345"
-    }
+      @download_params = {
+        "api" => "SYNO.DownloadStation.Task",
+        "version" => "1",
+        "method" => "create",
+        "session" => "DownloadStation",
+        "_sid" => "test_session_id_12345"
+      }
+    end
   end
 
   def teardown
