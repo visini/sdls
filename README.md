@@ -42,7 +42,9 @@ Run `just test` to lint and test.
 
 ## Releasing a new version
 
-First, tag the new version:
+On the main branch, add the changes to `CHANGELOG.md` and stage it.
+
+Then, tag the new version:
 
 ```rb
 git commit -am "Release v0.1.0"
