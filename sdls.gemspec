@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name = "sdls"
-  s.version = "0.1.1"
+  s.version = "0.1.2"
   s.required_ruby_version = ">= 3.4"
   s.summary = "Synology Download Station CLI"
   s.description = "A command-line interface for managing downloads on Synology Download Station."

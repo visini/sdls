@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.2] - 2025-06-02
+
+### Added
+
+- b3b7c3b Read credentials from 1Password #7
+
 ## [0.1.1] - 2025-06-02
 
 ### Added
