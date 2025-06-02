@@ -19,7 +19,10 @@ module SDLS
         raise "Configuration file (#{path}) is missing required keys or values: #{(missing_keys + nil_keys).uniq.join(", ")}"
       end
 
-      new(**data)
+      # Provide defaults for optional fields
+      data[:op_item_name] ||= nil
+
+      new(**data.merge(op_item_name: data[:op_item_name]))
     rescue Psych::SyntaxError => e
       raise "Error parsing configuration file (#{path}): #{e.message}"
     end

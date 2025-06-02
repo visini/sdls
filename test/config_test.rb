@@ -34,4 +34,35 @@ class ConfigTest < Minitest::Test
       ENV.delete("SDLS_CONFIG_PATH")
     end
   end
+
+  def test_config_output_without_op_item_name
+    Tempfile.create("sdls_config") do |file|
+      file.write <<~YAML
+        host: http://nas.local:5000
+        username: test_user
+        password: test_pass
+        directories:
+          - test/dir
+          - another
+      YAML
+      file.rewind
+
+      ENV["SDLS_CONFIG_PATH"] = file.path
+
+      output, _ = capture_io do
+        SDLS::CLI.start(["config"])
+      end
+
+      assert_equal <<~OUTPUT, output
+        Current config:
+          host: http://nas.local:5000
+          username: test_user
+          password: [REDACTED]
+          op_item_name: [NOT SET]
+          directories: test/dir, another
+      OUTPUT
+    ensure
+      ENV.delete("SDLS_CONFIG_PATH")
+    end
+  end
 end

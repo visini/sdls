@@ -2,6 +2,7 @@ require "net/http"
 require "uri"
 require "json"
 require "open3"
+require "tty-prompt"
 
 module SDLS
   class Client
@@ -13,8 +14,8 @@ module SDLS
     end
 
     def authenticate(otp: nil)
-      uri = build_uri("/webapi/auth.cgi", auth_params(otp))
-      response_body = make_request(uri)
+      uri = URI.join(@host, "/webapi/auth.cgi")
+      response_body = make_post_request(uri, auth_params(otp))
 
       handle_auth_response(response_body, otp)
     rescue => e
@@ -26,7 +27,7 @@ module SDLS
       sid = authenticate
       return false unless sid
 
-      uri = build_uri("/webapi/DownloadStation/task.cgi")
+      uri = URI.join(@host, "/webapi/DownloadStation/task.cgi")
       data = download_params(magnet, destination, sid)
 
       response = Net::HTTP.post_form(uri, data)
@@ -43,14 +44,8 @@ module SDLS
 
     private
 
-    def build_uri(endpoint, params = nil)
-      uri = URI.parse("#{@host}#{endpoint}")
-      uri.query = URI.encode_www_form(params) if params
-      uri
-    end
-
-    def make_request(uri)
-      response = Net::HTTP.get_response(uri)
+    def make_post_request(uri, params)
+      response = Net::HTTP.post_form(uri, params)
       raise "HTTP error: #{response.code}" unless response.is_a?(Net::HTTPSuccess)
       JSON.parse(response.body)
     end
@@ -96,10 +91,25 @@ module SDLS
     end
 
     def retry_with_otp
-      puts "OTP required for authentication. Fetching from 1Password..."
-      fetched_otp = fetch_otp_from_1password
-      return authenticate(otp: fetched_otp) if fetched_otp
-      raise "Could not retrieve OTP from 1Password"
+      puts "OTP required for authentication."
+
+      # Try 1Password first if configured and available
+      if @op_item_name && onepassword_cli_available?
+        puts "Fetching OTP from 1Password..."
+        fetched_otp = fetch_otp_from_1password
+        return authenticate(otp: fetched_otp) if fetched_otp
+        puts "Failed to retrieve OTP from 1Password, falling back to manual entry."
+      end
+
+      # Fallback to manual OTP entry
+      fetched_manual_otp = prompt_for_manual_otp
+      return authenticate(otp: fetched_manual_otp) if fetched_manual_otp
+
+      raise "Could not retrieve OTP"
+    end
+
+    def onepassword_cli_available?
+      system("which op > /dev/null 2>&1")
     end
 
     def fetch_otp_from_1password
@@ -112,6 +122,11 @@ module SDLS
         warn "Failed to retrieve OTP from 1Password: #{stderr.strip}"
         nil
       end
+    end
+
+    def prompt_for_manual_otp
+      prompt = TTY::Prompt.new
+      prompt.mask("Please enter your OTP code:")
     end
   end
 end
