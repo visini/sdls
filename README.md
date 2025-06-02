@@ -1,6 +1,6 @@
 # sdls - Synology Download Station CLI
 
-`sdls` is a command-line interface for adding download tasks to Synology Download Station using magnet links. It provides a simple, scriptable way to queue downloads from your terminal, including integration with 1Password for 2FA.
+`sdls` is a command-line interface for adding download tasks to Synology Download Station using magnet links. It provides a simple, scriptable way to queue downloads from your terminal, including an (optional) integration with 1Password for authentication (including 2FA).
 
 ## Installation
 
@@ -20,13 +20,24 @@ Commands:
 
 ## Configuration
 
-Configure via `~/.config/sdls.yml`:
+Configure via `~/.config/sdls.yml`.
+
+You may rely on the 1Password integration (this will read the credentials from the 1Password item):
+
+```yml
+host: http://nas.local:5000
+op_item_name: NameOf1PasswordItem
+directories:
+  - NAS/01_documents
+  - NAS/02_archive
+```
+
+Or, specify username and password manually:
 
 ```yml
 host: http://nas.local:5000
 username: username
 password: password
-op_item_name: NameOf1PasswordItem
 directories:
   - NAS/01_documents
   - NAS/02_archive

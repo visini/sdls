@@ -48,8 +48,8 @@ module SDLS
       puts "  host: #{current_config.host}"
       puts "  username: #{current_config.username}"
       puts "  password: [REDACTED]"
-      puts "  op_item_name: #{current_config.op_item_name}" if current_config.op_item_name
-      puts "  directories: #{current_config.directories.join(", ")}" if current_config.directories.any?
+      puts "  op_item_name: #{current_config.op_item_name || "[NOT SET]"}"
+      puts "  directories: #{current_config.directories.join(", ")}" if current_config.directories&.any?
     end
 
     desc "connect", "Verify connectivity and authentication with the server"

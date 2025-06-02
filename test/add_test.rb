@@ -23,6 +23,24 @@ class AddTest < Minitest::Test
     @temp_config.close
 
     ENV["SDLS_CONFIG_PATH"] = @temp_config.path
+
+    @auth_params = {
+      "account" => "test_user",
+      "api" => "SYNO.API.Auth",
+      "format" => "cookie",
+      "method" => "login",
+      "passwd" => "test_pass",
+      "session" => "FileStation",
+      "version" => "6"
+    }
+
+    @download_params = {
+      "api" => "SYNO.DownloadStation.Task",
+      "version" => "1",
+      "method" => "create",
+      "session" => "DownloadStation",
+      "_sid" => "test_session_id_12345"
+    }
   end
 
   def teardown
@@ -38,21 +56,15 @@ class AddTest < Minitest::Test
 
     # Mock successful download creation
     stub_request(:post, "http://nas.local:5000/webapi/DownloadStation/task.cgi")
-      .with(body: {
-        api: "SYNO.DownloadStation.Task",
-        version: "1",
-        method: "create",
-        session: "DownloadStation",
-        _sid: "test_session_id_12345",
+      .with(body: @download_params.merge(
         uri: magnet_link,
         destination: "NAS/01_documents"
-      })
+      ))
       .to_return(
         status: 200,
         body: {
           success: true
-        }.to_json,
-        headers: {"Content-Type" => "application/json"}
+        }.to_json
       )
 
     mock_prompt = Minitest::Mock.new
@@ -70,7 +82,7 @@ class AddTest < Minitest::Test
     end
 
     mock_prompt.verify
-    assert_requested :get, auth_url
+    assert_requested :post, "http://nas.local:5000/webapi/auth.cgi"
     assert_requested :post, "http://nas.local:5000/webapi/DownloadStation/task.cgi"
   end
 
@@ -85,7 +97,7 @@ class AddTest < Minitest::Test
 
     assert_match(/Invalid or missing magnet link./, stderr.strip)
     # Should not make any HTTP requests for invalid magnet
-    assert_not_requested :get, auth_url
+    assert_not_requested :post, "http://nas.local:5000/webapi/auth.cgi"
     assert_not_requested :post, "http://nas.local:5000/webapi/DownloadStation/task.cgi"
   end
 
@@ -114,7 +126,7 @@ class AddTest < Minitest::Test
     end
 
     mock_prompt.verify
-    assert_requested :get, auth_url
+    assert_requested :post, "http://nas.local:5000/webapi/auth.cgi"
     assert_not_requested :post, "http://nas.local:5000/webapi/DownloadStation/task.cgi"
   end
 
@@ -124,15 +136,10 @@ class AddTest < Minitest::Test
     stub_auth_success
 
     stub_request(:post, "http://nas.local:5000/webapi/DownloadStation/task.cgi")
-      .with(body: {
-        api: "SYNO.DownloadStation.Task",
-        version: "1",
-        method: "create",
-        session: "DownloadStation",
-        _sid: "test_session_id_12345",
+      .with(body: @download_params.merge(
         uri: magnet_link,
         destination: "NAS/02_archive"
-      })
+      ))
       .to_return(
         status: 200,
         body: {
@@ -140,8 +147,7 @@ class AddTest < Minitest::Test
           error: {
             code: 400
           }
-        }.to_json,
-        headers: {"Content-Type" => "application/json"}
+        }.to_json
       )
 
     mock_prompt = Minitest::Mock.new
@@ -161,7 +167,7 @@ class AddTest < Minitest::Test
     end
 
     mock_prompt.verify
-    assert_requested :get, auth_url
+    assert_requested :post, "http://nas.local:5000/webapi/auth.cgi"
     assert_requested :post, "http://nas.local:5000/webapi/DownloadStation/task.cgi"
   end
 
@@ -171,15 +177,10 @@ class AddTest < Minitest::Test
     stub_auth_success
 
     stub_request(:post, "http://nas.local:5000/webapi/DownloadStation/task.cgi")
-      .with(body: {
-        api: "SYNO.DownloadStation.Task",
-        version: "1",
-        method: "create",
-        session: "DownloadStation",
-        _sid: "test_session_id_12345",
+      .with(body: @download_params.merge(
         uri: magnet_link,
         destination: "NAS/01_documents"
-      })
+      ))
       .to_return(
         status: 500,
         body: {
@@ -187,8 +188,7 @@ class AddTest < Minitest::Test
           error: {
             code: 500
           }
-        }.to_json,
-        headers: {"Content-Type" => "application/json"}
+        }.to_json
       )
 
     mock_prompt = Minitest::Mock.new
@@ -208,7 +208,7 @@ class AddTest < Minitest::Test
     end
 
     mock_prompt.verify
-    assert_requested :get, auth_url
+    assert_requested :post, "http://nas.local:5000/webapi/auth.cgi"
     assert_requested :post, "http://nas.local:5000/webapi/DownloadStation/task.cgi"
   end
 
@@ -216,7 +216,10 @@ class AddTest < Minitest::Test
     magnet_link = "magnet:?xt=urn:btih:example123&dn=test.torrent"
 
     # Mock first auth response requiring OTP
-    stub_request(:get, auth_url)
+    stub_request(:post, "http://nas.local:5000/webapi/auth.cgi")
+      .with(
+        body: @auth_params
+      )
       .to_return(
         status: 200,
         body: {
@@ -227,12 +230,14 @@ class AddTest < Minitest::Test
               types: [{type: "otp"}]
             }
           }
-        }.to_json,
-        headers: {"Content-Type" => "application/json"}
+        }.to_json
       )
 
     # Mock second auth response with OTP that succeeds
-    stub_request(:get, auth_url_with_otp)
+    stub_request(:post, "http://nas.local:5000/webapi/auth.cgi")
+      .with(
+        body: @auth_params.merge("otp_code" => "123456")
+      )
       .to_return(
         status: 200,
         body: {
@@ -240,27 +245,21 @@ class AddTest < Minitest::Test
           data: {
             sid: "test_session_id_with_otp"
           }
-        }.to_json,
-        headers: {"Content-Type" => "application/json"}
+        }.to_json
       )
 
     # Mock successful download creation
     stub_request(:post, "http://nas.local:5000/webapi/DownloadStation/task.cgi")
-      .with(body: {
-        api: "SYNO.DownloadStation.Task",
-        version: "1",
-        method: "create",
-        session: "DownloadStation",
-        _sid: "test_session_id_with_otp",
+      .with(body: @download_params.merge(
         uri: magnet_link,
-        destination: "NAS/01_documents"
-      })
+        destination: "NAS/01_documents",
+        _sid: "test_session_id_with_otp"
+      ))
       .to_return(
         status: 200,
         body: {
           success: true
-        }.to_json,
-        headers: {"Content-Type" => "application/json"}
+        }.to_json
       )
 
     # Mock successful 1Password OTP retrieval
@@ -273,21 +272,25 @@ class AddTest < Minitest::Test
       ["NAS/01_documents", "NAS/02_archive"]
     ], default: "NAS/01_documents")
 
-    Open3.stub :capture3, ["123456\n", "", mock_status] do
-      TTY::Prompt.stub :new, mock_prompt do
-        output, _ = capture_io do
-          SDLS::CLI.start(["add", magnet_link])
-        end
+    # Mock that the CLI instance can access the client to stub onepassword_cli_available?
+    client = SDLS::Client.new(host: "http://nas.local:5000", username: "test_user", password: "test_pass", op_item_name: "MyItem")
+    client.stub :onepassword_cli_available?, true do
+      Open3.stub :capture3, ["123456\n", "", mock_status] do
+        TTY::Prompt.stub :new, mock_prompt do
+          output, _ = capture_io do
+            SDLS::CLI.start(["add", magnet_link])
+          end
 
-        assert_match(/OTP required for authentication. Fetching from 1Password.../, output)
-        assert_match(/Download created successfully in NAS\/01_documents/, output)
+          assert_match(/OTP required for authentication\./, output)
+          assert_match(/Fetching OTP from 1Password\.\.\./, output)
+          assert_match(/Download created successfully in NAS\/01_documents/, output)
+        end
       end
     end
 
     mock_status.verify
     mock_prompt.verify
-    assert_requested :get, auth_url
-    assert_requested :get, auth_url_with_otp
+    assert_requested :post, "http://nas.local:5000/webapi/auth.cgi", times: 2
     assert_requested :post, "http://nas.local:5000/webapi/DownloadStation/task.cgi"
   end
 
@@ -298,21 +301,15 @@ class AddTest < Minitest::Test
       stub_auth_success
 
       stub_request(:post, "http://nas.local:5000/webapi/DownloadStation/task.cgi")
-        .with(body: {
-          api: "SYNO.DownloadStation.Task",
-          version: "1",
-          method: "create",
-          session: "DownloadStation",
-          _sid: "test_session_id_12345",
+        .with(body: @download_params.merge(
           uri: magnet_link,
           destination: "NAS/01_documents"
-        })
+        ))
         .to_return(
           status: 200,
           body: {
             success: true
-          }.to_json,
-          headers: {"Content-Type" => "application/json"}
+          }.to_json
         )
 
       mock_prompt = Minitest::Mock.new
@@ -330,7 +327,7 @@ class AddTest < Minitest::Test
       end
 
       mock_prompt.verify
-      assert_requested :get, auth_url
+      assert_requested :post, "http://nas.local:5000/webapi/auth.cgi"
       assert_requested :post, "http://nas.local:5000/webapi/DownloadStation/task.cgi"
     end
   end
@@ -344,8 +341,7 @@ class AddTest < Minitest::Test
       .with(body: hash_including(uri: magnet_link))
       .to_return(
         status: 200,
-        body: {success: true}.to_json,
-        headers: {"Content-Type" => "application/json"}
+        body: {success: true}.to_json
       )
 
     mock_prompt = Minitest::Mock.new
@@ -364,14 +360,17 @@ class AddTest < Minitest::Test
     end
 
     mock_prompt.verify
-    assert_requested :get, auth_url
+    assert_requested :post, "http://nas.local:5000/webapi/auth.cgi"
     assert_requested :post, "http://nas.local:5000/webapi/DownloadStation/task.cgi"
   end
 
   private
 
   def stub_auth_success
-    stub_request(:get, auth_url)
+    stub_request(:post, "http://nas.local:5000/webapi/auth.cgi")
+      .with(
+        body: @auth_params
+      )
       .to_return(
         status: 200,
         body: {
@@ -379,13 +378,15 @@ class AddTest < Minitest::Test
           data: {
             sid: "test_session_id_12345"
           }
-        }.to_json,
-        headers: {"Content-Type" => "application/json"}
+        }.to_json
       )
   end
 
   def stub_auth_failure
-    stub_request(:get, auth_url)
+    stub_request(:post, "http://nas.local:5000/webapi/auth.cgi")
+      .with(
+        body: @auth_params
+      )
       .to_return(
         status: 200,
         body: {
@@ -393,16 +394,7 @@ class AddTest < Minitest::Test
           error: {
             code: 400
           }
-        }.to_json,
-        headers: {"Content-Type" => "application/json"}
+        }.to_json
       )
-  end
-
-  def auth_url
-    "http://nas.local:5000/webapi/auth.cgi?account=test_user&api=SYNO.API.Auth&format=cookie&method=login&passwd=test_pass&session=FileStation&version=6"
-  end
-
-  def auth_url_with_otp
-    "http://nas.local:5000/webapi/auth.cgi?account=test_user&api=SYNO.API.Auth&format=cookie&method=login&otp_code=123456&passwd=test_pass&session=FileStation&version=6"
   end
 end
