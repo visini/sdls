@@ -3,22 +3,22 @@
 require "thor"
 require "tty-prompt"
 
-module SDL
+module SDLS
   class CLI < Thor
-    DEFAULT_CONFIG_PATH = File.expand_path("~/.config/sdl.yml")
+    DEFAULT_CONFIG_PATH = File.expand_path("~/.config/sdls.yml")
 
     def initialize(*args, config_path: nil, **kwargs)
       super(*args, **kwargs)
-      @config_path = config_path || ENV["SDL_CONFIG_PATH"] || DEFAULT_CONFIG_PATH
+      @config_path = config_path || ENV["SDLS_CONFIG_PATH"] || DEFAULT_CONFIG_PATH
     end
 
     no_commands do
       def current_config
-        @config ||= SDL::Config.load(@config_path)
+        @config ||= SDLS::Config.load(@config_path)
       end
 
       def client
-        SDL::Client.new(
+        SDLS::Client.new(
           host: current_config.host,
           username: current_config.username,
           password: current_config.password,
@@ -27,9 +27,9 @@ module SDL
       end
     end
 
-    desc "version", "Display the SDL tool version"
+    desc "version", "Display the SDLS tool version"
     def version
-      puts SDL::VERSION
+      puts SDLS::VERSION
     end
 
     desc "config", "Display the current configuration"

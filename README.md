@@ -1,8 +1,8 @@
-# sdl - Synology Download Station CLI
+# sdls - Synology Download Station CLI
 
 ## Configuration
 
-Configure via `~/.config/sdl.yml`:
+Configure via `~/.config/sdls.yml`:
 
 ```yml
 host: http://nas.local:5000
@@ -16,6 +16,6 @@ directories:
 
 ## Development
 
-Run `bin/sdl` to execute the CLI.
+Run `bin/sdls` to execute the CLI.
 
 Run `just test` to lint and test.

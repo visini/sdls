@@ -2,7 +2,7 @@
 
 require "yaml"
 
-module SDL
+module SDLS
   REQUIRED_KEYS = %i[host username password]
   Config = Data.define(:host, :username, :password, :op_item_name, :directories) do
     def self.load(path)

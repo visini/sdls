@@ -3,7 +3,7 @@ require "uri"
 require "json"
 require "open3"
 
-module SDL
+module SDLS
   class Client
     def initialize(host:, username:, password:, op_item_name: nil)
       @host = host
