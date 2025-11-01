@@ -210,6 +210,7 @@ class CredentialsTest < Minitest::Test
       capture_io do
         config = SDLS::Config.load(path, prompt: prompt_mock)
         assert_nil config.op_item_name
+        assert_nil config.op_account
         assert_equal [], config.directories
       end
 
@@ -273,9 +274,10 @@ class CredentialsTest < Minitest::Test
     password_response = password ? [password, "", mock_success_status] : ["", "", mock_failure_status]
 
     Open3.stub(:capture3, lambda do |*args|
-      # Args: ["op", "item", "get", item_name, "--fields", field, "--reveal"]
-      # So field is at index -2 (second to last)
-      field = args[-2]
+      # Args can be: ["op", "item", "get", item_name, "--fields", field, "--reveal"]
+      # Or with account: ["op", "item", "get", item_name, "--fields", field, "--reveal", "--account", account]
+      # So we find the field by looking for the index after "--fields"
+      field = args[args.index("--fields") + 1] if args.include?("--fields")
       case field
       when "username"
         username_response

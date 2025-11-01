@@ -23,7 +23,8 @@ module SDLS
           host: current_config.host,
           username: current_config.username,
           password: current_config.password,
-          op_item_name: current_config.op_item_name
+          op_item_name: current_config.op_item_name,
+          op_account: current_config.op_account
         )
       end
 
@@ -49,6 +50,7 @@ module SDLS
       puts "  username: #{current_config.username}"
       puts "  password: [REDACTED]"
       puts "  op_item_name: #{current_config.op_item_name || "[NOT SET]"}"
+      puts "  op_account: #{current_config.op_account || "[NOT SET]"}"
       puts "  directories: #{current_config.directories.join(", ")}" if current_config.directories&.any?
     end
 

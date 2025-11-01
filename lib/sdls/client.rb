@@ -6,11 +6,12 @@ require "tty-prompt"
 
 module SDLS
   class Client
-    def initialize(host:, username:, password:, op_item_name: nil)
+    def initialize(host:, username:, password:, op_item_name: nil, op_account: nil)
       @host = host
       @username = username
       @password = password
       @op_item_name = op_item_name
+      @op_account = op_account
     end
 
     def authenticate(otp: nil)
@@ -121,7 +122,10 @@ module SDLS
     def fetch_otp_from_1password
       return nil unless @op_item_name
 
-      stdout, stderr, status = Open3.capture3("op item get \"#{@op_item_name}\" --otp")
+      cmd = ["op", "item", "get", @op_item_name, "--otp"]
+      cmd += ["--account", @op_account] if @op_account && !@op_account.to_s.strip.empty?
+
+      stdout, stderr, status = Open3.capture3(*cmd)
       if status.success?
         stdout.strip
       else
