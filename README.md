@@ -53,7 +53,15 @@ Run `just test` to lint and test.
 
 ## Releasing a new version
 
-On the main branch, add the changes to `CHANGELOG.md`.
+On the main branch, add the changes to `CHANGELOG.md`. Use the format:
+
+```md
+## [x.y.z] - YYYY-MM-DD
+
+### Added
+
+- commit_hash PR title #PR_number
+```
 
 Then, bump the version in `version.rb` and `sdls.gemspec`.
 
@@ -67,6 +75,6 @@ git tag v0.1.0
 git push origin main --tags
 ```
 
-Then, create a [new release](https://github.com/visini/sdls/releases/new) and choose the tag (e.g., `v0.1.0`) and title (e.g., `v0.1.0`). Copy the description from `CHANGELOG.md`.
+Then, create a [new release](https://github.com/visini/sdls/releases/new) and choose the tag (e.g., `v0.1.0`) and title (e.g., `v0.1.0`). Copy the description from `CHANGELOG.md`. Do not use the button "Generate release notes" to automatically populate the description.
 
 Finally, run `gem release`.
