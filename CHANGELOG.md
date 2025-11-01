@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.3] - 2025-11-01
+
+### Added
+
+- c4c8aff Add 1Password account config #8
+
 ## [0.1.2] - 2025-06-02
 
 ### Added
