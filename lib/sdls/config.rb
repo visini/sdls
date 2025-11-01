@@ -13,7 +13,7 @@ module SDLS
   # Core configuration keys that must be present
   REQUIRED_KEYS = %i[host].freeze
 
-  Config = Data.define(:host, :username, :password, :op_item_name, :directories) do
+  Config = Data.define(:host, :username, :password, :op_item_name, :op_account, :directories) do
     class << self
       def load(path, prompt: nil)
         validate_file_exists!(path)
@@ -52,6 +52,7 @@ module SDLS
 
       def set_defaults(data)
         data[:op_item_name] ||= nil
+        data[:op_account] ||= nil
         data[:directories] ||= []
         data
       end
@@ -62,6 +63,7 @@ module SDLS
 
       def resolve_credentials(data, prompt: nil)
         op_item_name = data[:op_item_name]
+        op_account = data[:op_account]
 
         # Check if we have both username and password from config
         has_config_username = data[:username] && !data[:username].to_s.strip.empty?
@@ -77,7 +79,7 @@ module SDLS
 
         # If 1Password item is specified and we're missing some credentials, try to fetch from there
         if op_item_name && !op_item_name.to_s.strip.empty? && (!has_config_username || !has_config_password)
-          onepassword_credentials = fetch_credentials_from_1password(op_item_name)
+          onepassword_credentials = fetch_credentials_from_1password(op_item_name, op_account)
           if onepassword_credentials[:success]
             final_username = has_config_username ? data[:username] : onepassword_credentials[:username]
             final_password = has_config_password ? data[:password] : onepassword_credentials[:password]
@@ -122,13 +124,13 @@ module SDLS
         prompt_for_credential("password", mask: true, prompt: prompt)
       end
 
-      def fetch_credentials_from_1password(op_item_name)
+      def fetch_credentials_from_1password(op_item_name, op_account = nil)
         return {success: false} unless onepassword_cli_available?
 
         puts "Fetching credentials from 1Password for item: #{op_item_name}..."
 
-        username = fetch_field_from_1password(op_item_name, "username")
-        password = fetch_field_from_1password(op_item_name, "password")
+        username = fetch_field_from_1password(op_item_name, "username", op_account)
+        password = fetch_field_from_1password(op_item_name, "password", op_account)
 
         puts "1Password item '#{op_item_name}' retrieved successfully."
         puts "Username: #{username.nil? ? "not found" : username}"
@@ -152,10 +154,11 @@ module SDLS
         {success: false}
       end
 
-      def fetch_field_from_1password(op_item_name, field)
-        stdout, _, status = Open3.capture3(
-          "op", "item", "get", op_item_name, "--fields", field, "--reveal"
-        )
+      def fetch_field_from_1password(op_item_name, field, op_account = nil)
+        cmd = ["op", "item", "get", op_item_name, "--fields", field, "--reveal"]
+        cmd += ["--account", op_account] if op_account && !op_account.to_s.strip.empty?
+
+        stdout, _, status = Open3.capture3(*cmd)
 
         if status.success? && !stdout.strip.empty?
           stdout.strip
